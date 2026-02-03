@@ -5,6 +5,9 @@
 # for instance:
 #
 #   ANDROID_NDK_ROOT=~/android-ndk OPENSSL_SRC=~/openssl ./build.sh
+ANDROID_NDK_ROOT=/home/amir/Android/Sdk/ndk/28.2.13676358
+OPENSSL_SRC=/home/amir/openssl-3.5.1 #./build.sh
+
 #
 # The files are written to the jni/openssl directory of the app, by default, but
 # that can be changed via $OUT variable.

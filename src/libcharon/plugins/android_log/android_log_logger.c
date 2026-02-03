@@ -60,12 +60,12 @@ METHOD(logger_t, log_, void,
 		next = strchr(current, '\n');
 		if (next == NULL)
 		{
-			__android_log_print(prio, "charon", "%.2d[%s] %s\n",
-								thread, sgroup, current);
+//			__android_log_print(prio, "charon", "%.2d[%s] %s\n",
+//								thread, sgroup, current);
 			break;
 		}
-		__android_log_print(prio, "charon", "%.2d[%s] %.*s\n",
-							thread, sgroup, (int)(next - current), current);
+//		__android_log_print(prio, "charon", "%.2d[%s] %.*s\n",
+//							thread, sgroup, (int)(next - current), current);
 		current = next + 1;
 	}
 	this->mutex->unlock(this->mutex);

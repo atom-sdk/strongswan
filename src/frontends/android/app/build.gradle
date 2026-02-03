@@ -18,7 +18,14 @@ android {
             }
         }
     }
-
+    signingConfigs {
+        release {
+            storeFile file("../sign.jks")
+            storePassword "12345678"
+            keyAlias "key0"
+            keyPassword "12345678"
+        }
+    }
     ndkVersion "27.2.12479018"
 
     externalNativeBuild {
@@ -36,6 +43,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {

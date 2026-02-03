@@ -130,8 +130,8 @@ static void dbg_android(debug_t group, level_t level, char *fmt, ...)
 			{
 				*(next++) = '\0';
 			}
-			__android_log_print(ANDROID_LOG_INFO, "charon", "00[%s] %s\n",
-								sgroup, current);
+//			__android_log_print(ANDROID_LOG_INFO, "charon", "00[%s] %s\n",
+//								sgroup, current);
 			current = next;
 		}
 	}
