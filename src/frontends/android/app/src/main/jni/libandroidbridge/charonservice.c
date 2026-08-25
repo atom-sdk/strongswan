@@ -130,8 +130,10 @@ static void dbg_android(debug_t group, level_t level, char *fmt, ...)
 			{
 				*(next++) = '\0';
 			}
-			__android_log_print(ANDROID_LOG_INFO, "charon", "00[%s] %s\n",
-								sgroup, current);
+			/* tunnel logs suppressed: do not forward charon library
+			 * debug output to Android logcat */
+//			__android_log_print(ANDROID_LOG_INFO, "charon", "00[%s] %s\n",
+//								sgroup, current);
 			current = next;
 		}
 	}
@@ -783,6 +785,56 @@ JNI_METHOD(CharonVpnService, initiate, void,
 	free(config);
 
 	initiate(settings);
+}
+
+/**
+ * Collect the IPsec tunnel traffic counters of all active CHILD_SAs.
+ *
+ * Returns a long[] with {received bytes, transmitted bytes, received packets,
+ * transmitted packets} aggregated over all CHILD_SAs, or NULL if the array
+ * could not be allocated.  The values are cumulative since the SAs were
+ * installed and reset when the tunnel is re-established.
+ */
+JNI_METHOD(CharonVpnService, getTrafficStatistics, jlongArray)
+{
+	enumerator_t *ikes, *children;
+	ike_sa_t *ike_sa;
+	child_sa_t *child_sa;
+	uint64_t bytes, packets;
+	uint64_t rx_bytes = 0, tx_bytes = 0, rx_packets = 0, tx_packets = 0;
+	jlongArray result;
+	jlong stats[4];
+
+	ikes = charon->controller->create_ike_sa_enumerator(charon->controller,
+														 FALSE);
+	while (ikes->enumerate(ikes, &ike_sa))
+	{
+		children = ike_sa->create_child_sa_enumerator(ike_sa);
+		while (children->enumerate(children, (void**)&child_sa))
+		{	/* inbound SA accounts for received (decrypted) traffic, the
+			 * outbound SA for transmitted (encrypted) traffic */
+			child_sa->get_usestats(child_sa, TRUE, NULL, &bytes, &packets);
+			rx_bytes += bytes;
+			rx_packets += packets;
+			child_sa->get_usestats(child_sa, FALSE, NULL, &bytes, &packets);
+			tx_bytes += bytes;
+			tx_packets += packets;
+		}
+		children->destroy(children);
+	}
+	ikes->destroy(ikes);
+
+	stats[0] = rx_bytes;
+	stats[1] = tx_bytes;
+	stats[2] = rx_packets;
+	stats[3] = tx_packets;
+
+	result = (*env)->NewLongArray(env, 4);
+	if (result)
+	{
+		(*env)->SetLongArrayRegion(env, result, 0, 4, stats);
+	}
+	return result;
 }
 
 /**
