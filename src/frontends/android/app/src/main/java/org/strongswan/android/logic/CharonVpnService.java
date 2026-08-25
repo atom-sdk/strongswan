@@ -823,6 +823,78 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 	public native void initiate(String config);
 
 	/**
+	 * Retrieve the IPsec tunnel traffic counters, provided by
+	 * libandroidbridge.so.
+	 *
+	 * The returned array is aggregated over all active CHILD_SAs and contains,
+	 * in order, the number of received bytes, transmitted bytes, received
+	 * packets and transmitted packets.  Returns an array of four zeros while no
+	 * tunnel is established.
+	 *
+	 * @return long[]{rxBytes, txBytes, rxPackets, txPackets}, or null on error
+	 */
+	public native long[] getTrafficStatistics();
+
+	/**
+	 * Immutable snapshot of the IPsec tunnel traffic counters.
+	 */
+	public static class TrafficStats
+	{
+		private final long mRxBytes;
+		private final long mTxBytes;
+		private final long mRxPackets;
+		private final long mTxPackets;
+
+		public TrafficStats(long rxBytes, long txBytes, long rxPackets, long txPackets)
+		{
+			mRxBytes = rxBytes;
+			mTxBytes = txBytes;
+			mRxPackets = rxPackets;
+			mTxPackets = txPackets;
+		}
+
+		/** Bytes received (decrypted) through the tunnel. */
+		public long getRxBytes()
+		{
+			return mRxBytes;
+		}
+
+		/** Bytes transmitted (encrypted) through the tunnel. */
+		public long getTxBytes()
+		{
+			return mTxBytes;
+		}
+
+		/** Packets received (decrypted) through the tunnel. */
+		public long getRxPackets()
+		{
+			return mRxPackets;
+		}
+
+		/** Packets transmitted (encrypted) through the tunnel. */
+		public long getTxPackets()
+		{
+			return mTxPackets;
+		}
+	}
+
+	/**
+	 * Convenience wrapper around {@link #getTrafficStatistics()} returning a
+	 * typed, immutable snapshot.
+	 *
+	 * @return current tunnel traffic counters (all zero if no tunnel is up)
+	 */
+	public TrafficStats getTunnelTraffic()
+	{
+		long[] stats = getTrafficStatistics();
+		if (stats == null || stats.length < 4)
+		{
+			return new TrafficStats(0, 0, 0, 0);
+		}
+		return new TrafficStats(stats[0], stats[1], stats[2], stats[3]);
+	}
+
+	/**
 	 * Adapter for VpnService.Builder which is used to access it safely via JNI.
 	 * There is a corresponding C object to access it from native code.
 	 */
